@@ -3,6 +3,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { getFeed } from "../feature/feedSlice";
 import UserCard from "./UserCard";
+import { useNavigate } from "react-router-dom";
 
 const STACK_SIZE = 5;
 
@@ -25,13 +26,20 @@ const getStackStyle = (depth) => {
 
 const Feed = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const feed = useSelector((store) => store.feed);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchFeedData = async () => {
       try {
         const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login", { replace: true });
+          return;
+        }
 
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL}/feed`,
@@ -42,17 +50,32 @@ const Feed = () => {
           },
         );
 
-       
+        setErrorMessage("");
         dispatch(getFeed(response.data.data));
       } catch (error) {
         console.log(error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        setErrorMessage("Could not load developers. Please try again.");
       }
     };
 
     if (!feed) {
       fetchFeedData();
     }
-  }, [dispatch, feed]);
+  }, [dispatch, feed, navigate]);
+
+  if (errorMessage) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-4 py-20">
+        <p className="text-lg font-medium text-white">{errorMessage}</p>
+      </section>
+    );
+  }
 
   if (!feed) {
     return (
