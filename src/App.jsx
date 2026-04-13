@@ -5,6 +5,7 @@ import Feed from "./components/Feed";
 import Profile from "./components/Profile";
 import Connections from "./components/Connections";
 import Requests from "./components/Requests";
+import ForgotPassword from "./components/ForgotPass";
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="connections" element={<Connections />} />
           <Route path="requests" element={<Requests />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -27,10 +27,10 @@ const Connections = () => {
   };
 
   useEffect(() => {
-    if (connection.length === 0) {
+    if (!connection) {
       fetchConnections();
     }
-  }, [connection]);
+  }, []);
 
   return (
     <div className="min-h-screen py-10 px-4">

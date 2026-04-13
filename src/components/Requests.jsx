@@ -45,10 +45,10 @@ const Request = () => {
   };
 
   useEffect(() => {
-    if (request.length === 0) {
+    if (!request) {
       fetchRequest();
     }
-  }, [request]);
+  }, []);
 
   return (
     <div className="min-h-screen py-10 px-4">

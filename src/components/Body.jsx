@@ -11,9 +11,10 @@ const Body = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((store) => store.user);
-  const isLoginPage = location.pathname === "/login";
+  const publicRoutes = ["/login", "/forgot-password"];
+  const isPublicPage = publicRoutes.includes(location.pathname);
   const [isCheckingAuth, setIsCheckingAuth] = useState(
-    !isLoginPage && !user,
+    !isPublicPage && !user,
   );
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Body = () => {
       }
     };
 
-    if (isLoginPage || user) {
+    if (isPublicPage || user) {
       setIsCheckingAuth(false);
       return;
     }
@@ -57,7 +58,7 @@ const Body = () => {
     if (!user) {
       fetchUserProfile();
     }
-  }, [dispatch, isLoginPage, navigate, user]);
+  }, [dispatch, isPublicPage, navigate, user]);
 
   return (
     <div className="flex min-h-screen flex-col">
