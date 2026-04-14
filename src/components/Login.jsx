@@ -120,13 +120,15 @@ const Login = () => {
                 Password
               </label>
 
-              <button
-                type="button"
-                className="text-xs text-emerald-400 hover:text-emerald-300 hover:underline transition"
-                onClick={() => navigate("/forgot-password")}
-              >
-                Forgot password?
-              </button>
+              {!isSignIn && (
+                <button
+                  type="button"
+                  className="text-xs text-emerald-400 transition hover:text-emerald-300 hover:underline"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  Forgot password?
+                </button>
+              )}
             </div>
 
             <input

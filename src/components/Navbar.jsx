@@ -45,7 +45,7 @@ const Navbar = () => {
             </div>
             <div>
               <p className="text-lg font-semibold tracking-tight text-white">
-                DevTinder
+                DevWeave
               </p>
               <p className="text-xs text-slate-400">
                 Meet developers worth building with

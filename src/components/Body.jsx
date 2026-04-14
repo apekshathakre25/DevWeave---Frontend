@@ -12,7 +12,9 @@ const Body = () => {
   const location = useLocation();
   const user = useSelector((store) => store.user);
   const publicRoutes = ["/login", "/forgot-password"];
-  const isPublicPage = publicRoutes.includes(location.pathname);
+  const isPublicPage =
+    publicRoutes.includes(location.pathname) ||
+    location.pathname.startsWith("/reset-password/");
   const [isCheckingAuth, setIsCheckingAuth] = useState(
     !isPublicPage && !user,
   );
