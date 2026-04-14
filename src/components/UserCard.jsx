@@ -4,9 +4,12 @@ const UserCard = ({ formData, onInterested, onIgnore }) => {
   const hasActions = onInterested || onIgnore;
 
   const skillsArray = Array.isArray(formData?.skills)
-    ? formData?.skills
-    : formData?.skills
-        ?.split(",")
+    ? formData.skills
+    : formData?.skills?.split(",");
+
+  const visibleSkills = (skillsArray || [])
+    .map((skill) => String(skill).trim())
+    .filter(Boolean);
       
 
   return (
@@ -14,7 +17,7 @@ const UserCard = ({ formData, onInterested, onIgnore }) => {
       <img
         src={formData?.profilePicture}
         alt={fullName || "profile"}
-        className="absolute inset-0 w-120 h-80 object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
       />
 
@@ -44,9 +47,9 @@ const UserCard = ({ formData, onInterested, onIgnore }) => {
           {formData?.about || "No bio available"}
         </p>
 
-        {skillsArray?.length > 0 ? (
+        {visibleSkills.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {skillsArray.slice(0, 5).map((skill, i) => (
+            {visibleSkills.slice(0, 5).map((skill, i) => (
               <span
                 key={`${skill}-${i}`}
                 className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"

@@ -3,8 +3,8 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { addUser } from "../feature/userSlice";
+import { api, clearAuthToken, getAuthConfig } from "../utils/api";
 
 const Body = () => {
   const dispatch = useDispatch();
@@ -20,29 +20,22 @@ const Body = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const authConfig = getAuthConfig();
 
-        if (!token) {
+        if (!authConfig) {
           navigate("/login", { replace: true });
           return;
         }
 
         setIsCheckingAuth(true);
 
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const response = await api.get("/profile", authConfig);
 
         dispatch(addUser(response.data));
       } catch (error) {
         console.log(error);
         if (error.response?.status === 401) {
-          localStorage.removeItem("token");
+          clearAuthToken();
           navigate("/login", { replace: true });
         }
       } finally {

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getFeed } from "../feature/feedSlice";
 import UserCard from "./UserCard";
 import { useNavigate } from "react-router-dom";
+import { api, clearAuthToken, getAuthConfig } from "../utils/api";
 
 const STACK_SIZE = 5;
 
@@ -30,44 +30,48 @@ const Feed = () => {
   const feed = useSelector((store) => store.feed);
   const [activeIndex, setActiveIndex] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isFetchingFeed, setIsFetchingFeed] = useState(false);
+
+  const fetchFeedData = useCallback(async () => {
+    try {
+      const authConfig = getAuthConfig();
+
+      if (!authConfig) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setIsFetchingFeed(true);
+
+      const response = await api.get("/feed", {
+        params: {
+          limit: 10,
+        },
+        ...authConfig,
+      });
+
+      setErrorMessage("");
+      setActiveIndex(0);
+      dispatch(getFeed(response.data.data));
+    } catch (error) {
+      console.log(error);
+      if (error.response?.status === 401) {
+        clearAuthToken();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setErrorMessage("Could not load developers. Please try again.");
+    } finally {
+      setIsFetchingFeed(false);
+    }
+  }, [dispatch, navigate]);
 
   useEffect(() => {
-    const fetchFeedData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          navigate("/login", { replace: true });
-          return;
-        }
-
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/feed`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        setErrorMessage("");
-        dispatch(getFeed(response.data.data));
-      } catch (error) {
-        console.log(error);
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login", { replace: true });
-          return;
-        }
-
-        setErrorMessage("Could not load developers. Please try again.");
-      }
-    };
-
     if (!feed) {
       fetchFeedData();
     }
-  }, [dispatch, feed, navigate]);
+  }, [feed, fetchFeedData]);
 
   if (errorMessage) {
     return (
@@ -91,6 +95,44 @@ const Feed = () => {
   const showNextCard = () => {
     setActiveIndex((prev) => (prev < feed.length ? prev + 1 : prev));
   };
+
+  const handleSendRequest = async (status, toUserId) => {
+    try {
+      const authConfig = getAuthConfig();
+
+      if (!authConfig) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      await api.post(`/request/send/${status}/${toUserId}`, {}, authConfig);
+
+      setErrorMessage("");
+      if (activeIndex >= feed.length - 1) {
+        await fetchFeedData();
+      } else {
+        showNextCard();
+      }
+    } catch (error) {
+      console.log(error);
+      if (error.response?.status === 401) {
+        clearAuthToken();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setErrorMessage("Could not update this request. Please try again.");
+    }
+  };
+
+  if (isFetchingFeed) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-4 py-20">
+        <span className="loading loading-spinner loading-lg text-emerald-400"></span>
+        <p className="text-lg font-medium text-white">Finding developers...</p>
+      </section>
+    );
+  }
 
   if (remainingUsers.length === 0) {
     return (
@@ -138,8 +180,10 @@ const Feed = () => {
                 >
                   <UserCard
                     formData={user}
-                    onInterested={showNextCard}
-                    onIgnore={showNextCard}
+                    onInterested={() =>
+                      handleSendRequest("interested", user._id)
+                    }
+                    onIgnore={() => handleSendRequest("ignored", user._id)}
                   />
                 </div>
               );

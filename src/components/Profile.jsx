@@ -1,28 +1,10 @@
 import { useSelector } from "react-redux";
 import UserCard from "../components/UserCard";
 import EditProfile from "./EditProfile";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const Profile = () => {
-  const user = useSelector((store) => store.user);
-  const [formData, setFormData] = useState(null);
-
-  useEffect(() => {
-    if (user?.user) {
-      setFormData(user.user);
-    }
-  }, [user?.user]);
-
-  if (!user?.user) {
-    return (
-      <section className="flex flex-col items-center justify-center gap-4 py-20">
-        <span className="loading loading-spinner loading-lg text-emerald-400"></span>
-        <p className="text-lg font-medium text-white">
-          Loading your profile...
-        </p>
-      </section>
-    );
-  }
+const ProfileEditor = ({ profile }) => {
+  const [formData, setFormData] = useState(profile);
 
   return (
     <section className="min-h-screen px-6 py-10">
@@ -45,7 +27,7 @@ const Profile = () => {
       <div className="mt-10 flex flex-col lg:flex-row items-start justify-center gap-10">
         {/* Edit Form */}
         <div className="w-full max-w-lg">
-          <EditProfile formData={formData} setFormData={setFormData}/>
+          <EditProfile formData={formData} setFormData={setFormData} />
         </div>
 
         {/* Preview Card */}
@@ -55,6 +37,23 @@ const Profile = () => {
       </div>
     </section>
   );
+};
+
+const Profile = () => {
+  const user = useSelector((store) => store.user);
+
+  if (!user?.user) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-4 py-20">
+        <span className="loading loading-spinner loading-lg text-emerald-400"></span>
+        <p className="text-lg font-medium text-white">
+          Loading your profile...
+        </p>
+      </section>
+    );
+  }
+
+  return <ProfileEditor key={user.user._id} profile={user.user} />;
 };
 
 export default Profile;

@@ -1,64 +1,78 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import axios from "axios";
+import { useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getRequest, removeRequest } from "../feature/requestSlice";
+import { api, clearAuthToken, getAuthConfig } from "../utils/api";
 
 const Request = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const request = useSelector((store) => store.request);
 
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
+      const authConfig = getAuthConfig();
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/pending/connections`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      if (!authConfig) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const response = await api.get("/pending/connections", authConfig);
 
       dispatch(getRequest(response.data.data));
     } catch (error) {
       console.log(error);
+      if (error.response?.status === 401) {
+        clearAuthToken();
+        navigate("/login", { replace: true });
+      }
     }
-  };
+  }, [dispatch, navigate]);
 
   const handleRequest = async (status, requestId) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/request/review/${status}/${requestId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const authConfig = getAuthConfig();
+
+      if (!authConfig) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      await api.post(`/request/review/${status}/${requestId}`, {}, authConfig);
       dispatch(removeRequest(requestId));
     } catch (error) {
       console.log(error);
+      if (error.response?.status === 401) {
+        clearAuthToken();
+        navigate("/login", { replace: true });
+      }
     }
   };
 
   useEffect(() => {
-    if (!request) {
-      fetchRequest();
-    }
-  }, []);
+    fetchRequest();
+  }, [fetchRequest]);
 
   return (
     <div className="min-h-screen py-10 px-4">
       <h1 className="text-3xl font-bold text-center mb-10 text-gray-500">
-        Your Request
+        Your Requests
       </h1>
+
+      {request.length === 0 ? (
+        <p className="text-center text-slate-400">
+          No pending requests right now.
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {request.map((conn) => {
           const user = conn.fromUserId;
+
+          if (!user) {
+            return null;
+          }
 
           return (
             <div

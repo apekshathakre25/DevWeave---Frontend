@@ -1,8 +1,8 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addUser } from "../feature/userSlice";
+import { api, setAuthToken } from "../utils/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -21,17 +21,15 @@ const Login = () => {
       setErrorMessage("");
       setLoading(true);
 
-      const url = isSignIn
-        ? `${import.meta.env.VITE_API_URL}/register`
-        : `${import.meta.env.VITE_API_URL}/login`;
+      const url = isSignIn ? "/signup" : "/login";
 
       const payload = isSignIn
         ? { firstname, lastname, email, password }
         : { email, password };
 
-      const response = await axios.post(url, payload);
+      const response = await api.post(url, payload);
 
-      localStorage.setItem("token", response.data.token);
+      setAuthToken(response.data.token);
 
       dispatch(addUser(response.data));
 
